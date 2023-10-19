@@ -1,0 +1,388 @@
+# sudo su –
+
+Let’s us Install Ansible on this Machine:
+********************************************************
+# ansible --version
+
+Setup Ansible:
+
+#  sudo apt-get install -y software-properties-common
+#  sudo apt-add-repository ppa:ansible/ansible
+#  sudo apt-get update
+#  sudo apt-get install -y ansible
+
+Ansible Installation is complete now on the Master node.
+
+OPEN SECURE SHELL CONNECTION – SSH Connection setup
+================================================
+Step 1:
+
+Create a new user on the terminal:
+
+# adduser ansiuser
+
+Enter New password :  ansiuser
+Retype new Password: ansiuser
+
+Don’t enter any value for fullname, room number, workphone, homephone other
+
+Just keep pressing enter key.	
+
+And give Y  for 
+
+Is the information correct ? [Y/n]  : y
+
+User will now be created.
+===============================================
+
+Step 2:
+Open the below file by executing below command:
+#  vim /etc/ssh/sshd_config
+
+Press i 
+Scroll down until you find PasswordAuthentication no
+> Change value of PasswordAuthentication  to yes
+Save the file by pressing ESC key and then enter :wq! and press enter key
+
+Step 3:
+Add ansiuser in sudoers files and give all permission
+# vim /etc/sudoers
+Press i
+Scroll down until your find : # User privilege specification
+Now enter below line under  root    ALL=(ALL:ALL) ALL
+ansiuser ALL=NOPASSWD: ALL
+Save the file.
+
+Step 4:
+Execute below command :
+#    systemctl restart sshd
+
+
+Repeat these steps (1 to 4)  on Worker 1 and worker 2
+================================
+Step 1:
+
+Create a new user on the terminal:
+
+# adduser ansiuser
+
+Enter New password :  ansiuser
+Retype new Password: ansiuser
+
+Don’t enter any value for fullname, room number, workphone, homephone other
+
+Just keep pressing enter key.	
+
+And give Y  for 
+
+Is the information correct ? [Y/n]  : y
+
+Step 2:
+Open the below file by executing below command:
+#  vim /etc/ssh/sshd_config
+
+
+Press i 
+Scroll down until you find PasswordAuthentication no
+	Change value of PasswordAuthentication  to yes
+Save the file.
+
+
+Step 3:
+Add ansiuser in sudoers files and give all permission
+# vim /etc/sudoers
+Press i
+Scroll down until your find : # User privilege specification
+Now enter below line under  root    ALL=(ALL:ALL) ALL
+ansiuser ALL=NOPASSWD: ALL
+
+Step 4:
+# systemctl restart sshd
+==========================================================
+
+Generate SSH key on Master machine and copy SSH key on worker machine
+All These Steps will be executed on Master Machine only
+**********************
+
+Step 1: 
+Change user from root to ansiuser
+#   su – ansiuser
+
+Step 2:
+Generate ssh key on Master node for ansiuser
+Execute below command:
+# ssh-keygen
+
+press enter
+press enter
+press enter
+
+ssh key will be generated
+
+Now lets copy the ssh key of master machine to Worker machine1 and worker machine 2
+Execute the below command on master machine.
+Syntax:
+ ssh-copy-id -i ansiuser@privateipWorker1
+
+#  ssh-copy-id -i ansiuser@172.31.26.98
+
+Repeat the same command to copy ssh key on Worker2 also.
+
+======================================================
+
+Ansible Inventory File Set up:
+==================================================================================
+By default the inventory file for ansible will be available at /etc/ansible directory
+Demo:
+
+#  cd /etc/ansible
+# ls
+You will see the hosts file
+Open the hosts file and create host group name as show below
+
+[worker1]
+privateipWorker1
+
+[worker2]
+PrivateipofWorker2
+
+[webserver]
+Privateipworker1
+Privateipworker2
+
+Save the host file.
+
+Let’s validate if ansible ad-hoc commands are getting executed using the host group created above.
+
+Validate if ansible can ping Worker1 in lab
+#  ansible worker1 -m ping
+Validate if ansible can ping Worker2 in lab
+
+# ansible worker2 -m ping
+
+# ansible webserver -m ping
+
+Great! Your setup for Ansible Controller machine and Ansible Host machines is now Complete.
+
+===================================================================
+
+The default location of Ansible inventory file is /etc/ansible, however we can create ansible inventory file in any other directory also.
+Let’s see how we can create Ansible Inventory and ansible.cfg file in different location and use it for ansible ad-hoc command and playbooks:
+
+Demo:
+Currently we are logged in as ansiuser.
+Lets create an inventory file in home directory of ansiuser which is /home/ansiuser
+
+# cd
+# pwd
+
+Lets create a file with name as myinventory and create host group inside it
+
+# vim myinventory
+Press i to insert below data
+
+[webserver]
+172.31.26.98
+172.31.22.35
+
+Save the file.
+
+Execute adhoc command using the current inventory file
+Syntax:
+ansible -i /pathtoinventoryfile  groupname -m modulename
+
+execute this command:
+#   ansible -i /home/ansiuser/myinventory webserver -m ping
+
+
+Let’s see a demo where we make this inventory file as your default inventory file.
+We will create a new ansible.cfg file in the same directory of ansiuser and set up the inventory file location.
+
+#   vim ansible.cfg
+Press i  and enter below data
+[defaults]
+inventory = /home/ansiuser/myinventory
+
+Save the file.
+
+Now execute the adhoc command without giving the path of inventory file.
+
+# ansible webserver -m ping
+
+
+Note: Ansible always looks in the current directory for inventory file and then checks for inventory file in /etc/ansible directory.
+==================================================
+
+Ad-hoc commands Demo:
+
+1.	ansible webserver -m command -a "free -h"
+2.	ansible webserver -m command -a "whoami"
+3.	ansible webserver -m file -a "name=/tmp/testdir state=directory"
+4.	ansible webserver -m command -a "ls -al /tmp"
+5.	ansible webserver -m file -a "name=/tmp/testdir state=absent"
+6.	ansible webserver -m file -a "name=/tmp/testfile state=touch"
+7.	ansible webserver -m file -a "name=/tmp/testfile state=absent"
+
+====================================
+
+Playbooks Demo
+======================================
+
+Playbook1.yml : Debug module
+============================
+# vim playbookdebug.yml
+- hosts: webserver
+  tasks:
+  - name: Print a message on hostserver
+    debug: msg="Welcome to Ansible Playbook"
+
+Save the file.
+
+Execute the playbook:
+# ansible-playbook playbookdebug.yml --syntax-check
+# ansible-playbook playbookdebug.yml
+
+
+Playbook2.yml: Register Demo
+=========================
+
+Step 1: Create playbook that will execute a command on the hostserver:
+
+# vim playbookregister.yml
+- hosts: webserver
+  tasks:
+  - name: Execute a command on the host
+    command: hostname -s
+    
+Save the file and execute
+# ansible-playbook playbookregister.yml
+
+The playbook is executed but we are not able to see the output of the command. We will now save the output of a command in a variable using register module.
+Again open the playbook file:
+
+# vim playbookregister.yml
+
+- hosts: webserver
+  tasks:
+  - name: Execute a command on the host
+    command: hostname -s
+    register: hostname_output
+  - name: show  the hostname_output
+    debug:
+     var: hostname_output
+
+Save the file and execute.
+# ansible-playbook playbookregister.yml
+
+
+
+Before we begin next playbook, lets look at Setup module and Fact variable:
+
+# ansible webserver -m setup
+It gives lot of information
+# ansible webserver -m setup | wc -l
+It will return total number of lines
+# ansible webserver -m setup -a "filter=ansible_memfree_mb"
+It will return value for given ansible variable.
+# ansible webserver -m setup -a "filter=ansible_mem*”
+You can also use wild card in filter to get all values starting eith ansible_mem
+
+
+Playbook3.yml => Fact variables:
+
+Lets write a playbook using ansible fact Variables
+
+# vim playbookdebugVar.yml
+- hosts: webserver
+  tasks:
+  - name: Show Ipaddress of the host servers
+    debug:
+     msg="The ipaddress of host server  is {{ansible_default_ipv4.address}}"
+  - name: print variable
+    debug:
+     var=ansible_default_ipv4.address
+
+# ansible-playbook  playbookdebugVar.yml
+
+
+Playbook 4 -> When Condition:
+==========================================
+
+vim playbookwhen.yml
+
+# vim playbookwhen.yml
+- hosts: webserver
+  tasks:
+  - name: Execute a command on the host
+    command: hostname -s
+    when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
+          (ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "20")
+    register: hostname_output
+  - name: show  the hostname_output
+    debug:
+     var: hostname_output.stdout
+
+
+Save the file and execute.
+
+# ansible-playbook playbookwhen.yml
+
+Playbook 5: Loops
+========================================
+
+Ansible loops and task control:
+
+Write a playbook to install/ setup a LAMP (LinuxApacheMysqlPhp) stack on our Debian/Ubuntu server:
+
+vim playbookloop.yml
+
+- hosts: webserver
+  become: true
+  become_user: root
+  tasks:
+  - name: update apt cache
+    apt: update_cache=yes cache_valid_time=3600
+  - name: Install packages on the host servers
+    package: name={{item}} state=present
+    loop:
+     - apache2
+     - mysql-server
+     - php-mysql
+     - php
+     - libapache2-mod-php
+     - python3-mysqldb
+
+
+# ansible-playbook playbookloop.yml
+
+===========================================
+
+Write a playbook using custom variables and loops:
+
+vim playbookloop2.yml
+
+- hosts: webserver
+  become: true
+  become_user: root
+  vars:
+   user_list:
+    - user01
+    - user02
+    - user03
+  tasks:
+  - name: update apt cache
+    apt: update_cache=yes cache_valid_time=3600
+  - name: Install packages on the host servers
+    package: name={{item}} state=present
+    loop:
+     - apache2
+     - mysql-server
+     - php-mysql
+     - php
+     - libapache2-mod-php
+     - python3-mysqldb
+  - name: Create users on host servers
+    user: name={{item}} state=present
+    loop: "{{user_list}}"
+    
+    
