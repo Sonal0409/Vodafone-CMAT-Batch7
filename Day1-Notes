@@ -1,6 +1,6 @@
 # sudo su –
 
-Let’s us Install Ansible on this Machine:
+Let’s us Install Ansible on the Master Node:
 ********************************************************
 # ansible --version
 
