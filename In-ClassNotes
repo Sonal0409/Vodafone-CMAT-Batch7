@@ -1,0 +1,356 @@
+
+Day 1:
+================================
+
+Configuration:
+
+ > install of package/software
+ > Creating directory, file
+ > creating user, permission, groups
+ > Copying a file, fetching a file
+ > Change on the VM/remote server
+
+If we have to do the same task of installing a package on 200 servers-> diffucult, time consumming
+
+In real time, we have many env : dev, QA, prod
+ - different configurations have to mainted for different env
+ - manually mangining these env will be time consuming
+ - traditionally scripts to connect to servers and make the changes
+
+In order to overcome these challenges, we having CM tools in the market
+========================================================
+- brings consisitency across an environment
+
+- you will write simple code to connect to various servers in an environment
+
+- And then you will write code to apply changes on the remote servers
+
+- CM tool can connect to multiple servers at smae time and apply the configuration changes
+
+- Writing of CM tool code is very easy to write and understand
+
+- you can store the code in github + integrate it with Jenkins -> schedule the execution of CM code
+
+
+CM tools:
+=================
+
+Pull approch
+================
+Puppet
+Chef
+
+Push Approch
+=================
+Ansible
+Saltstack
+
+
+Ansible Architecture:
+
+===============================
+
+Inventory:
+=====================
+
+Inventory is a simple file which includes the ipaddress or hostnames of worker servers where ansible has to do the changes.
+
+Ansible provides us this file by default. This file has no extension
+
+The default name is hosts. This file is present in location : /etc/ansible/hosts
+
+There are 2 types of inventory files:
+
+ - Ststic inventory  : user will enter the ipaddress into it
+ - Dynamic Inventory 
+     -> if infra is on cloud, ansible can connect to the cloud provider in the given region and can pull the current VM inventory
+
+
+Modules:
+================
+
+Ansible works by connecting to your worker nodes and executing "ansible Modules" on them
+Modules are pre-written python program available in Ansible
+These modules will have the logic do changes on the server.
+Most of the modules in ansible accept some paramertes from the user describing the desired state on the server.
+
+Copy(src=/tmp/file dest=/tmp)
+package(name=mysql state=absent) -
+
+Ansible configuration file:
+===============================
+This file is a default file in ansible and is present in /etc/ansible
+This file consist 2 main sections:
+
+ > defaults => provides variable with default settings of ansible
+ > privilege
+
+We can customize this file with our variables values.
+
+The name of this file is ansible.cfg
+
+
+[defualts]
+inventory= ./myinventory
+remote_user= labsuser
+ask_pass=true
+host_key_checking=false
+forks=2
+[privilege_escalation]
+become=true
+become_user=root
+
+
+Playbooks:
+===============================
+Playbooks in ansible 
+> will have the host server details where changes have to be done
+> Will have module names(tasks) for our desired changes
+
+Playbook will be written in YAML
+
+
+========================
+
+Setting up of Ansible lab
+=============================
+
+
+1 master- ubuntu
+
+- install ansible
+
+Open SSH connection steps:
+Create a user: ansiunser and set a passwd for it
+We also need to enable password authentication between the 2 servers
+We also need to give user permissions to work on the controllers
+
+
+We need to connect to worker node via SSH
+one server 1 we generate SSH keys using the command ssh-keygen for user ansiuser
+This command will generate 2 keys publick key and private key.
+The public key has to copied from Master node on the worker node
+We will use SCP command to copy the keys on the worker nodes
+
+# scp -i ansiuser@workerIpaddress
+password: ansiuser
+
+
+1 worker nodes - ubuntu
+
+Create a user: ansiunser and set a passwd for it
+We also need to enable password authentication between the 2 servers
+We also need to give user permissions to work on the controllers
+
+
+ssh-copy-id -i username@privateipofWorker1
+
+ssh-copy-id -i ansiusers@172.31.47.98
+
+
+172.31.47.98
+
+172.31.42.13
+
+
+Ansible adhoc command:
+==============================
+
+ansible ipaddress -m modulename
+
+ping module -->connect to worker nodes and see if it successfully connected and fetches python version on worker nodes
+
+
+================================================
+
+1. ansible 172.31.47.98 -m ping
+
+2. ansible  172.31.42.13:172.31.47.98 -m ping
+
+3. ansible  all -m ping
+
+# you cann add the ipaddress in the group
+
+[webserver]
+172.31.47.98
+172.31.42.13
+
+[dbservers]
+172.31.47.98
+
+[QAenv]
+172.31.42.13
+
+4. ansible dbservers -m ping
+
+
+
+# A parent group with set of groups which are children
+[allserver:children]
+webserver
+dbservers
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
