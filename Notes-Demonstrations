@@ -350,14 +350,14 @@ Custom Variables:
 ==================================
 vim Customvariable.yml
 
-
-
 - name: Introduction to Custom variables
   hosts: webserver
   become: true
   vars:
    pkg_name: apache2
   tasks:
+  - name: Update apt-get repo
+    command: apt-get update
   - name: Install {{pkg_name}}  package
     package: name={{pkg_name}} state=present
   - name: Start the {{pkg_name}} application
