@@ -384,5 +384,38 @@ vim playbookloop2.yml
   - name: Create users on host servers
     user: name={{item}} state=present
     loop: "{{user_list}}"
-    
-    
+
+=======================
+
+Demo on tags:
+
+========================================================
+vim playbooktags.yml
+
+- hosts: webserver
+  become: true
+  tasks:
+  - name: update apt-cache
+    apt: update_cache=yes cache_valid_time=3600
+    tags: install
+  - name: install package for LAMP architecture
+    package: name={{item}} state=present
+    loop:
+     - mysql-server
+     - php-mysql
+    tags: install
+  - name: Create a directory on worker nodes
+    file: path=/tmp/mydir state=directory
+    tags: mydir
+  - name: Create a file in the directory
+    file: path=/tmp/sonal state=touch
+    tags: myfile
+
+# ansible-playbook playbooktags.yml --tags=install
+# ansible-playbook playbooktags.yml --tags=install,mydir
+# ansible-playbook playbooktags.yml --skip-tags=install,mydir
+# ansible-playbook playbooktags.yml --tags untagged
+# ansible-playbook playbooktags.yml --tags tagged
+
+
+
