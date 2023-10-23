@@ -346,6 +346,28 @@ Save the file and execute.
 
 # ansible-playbook playbookwhen.yml
 =========================================
+Custom Variables:
+==================================
+vim Customvariable.yml
+
+
+
+- name: Introduction to Custom variables
+  hosts: webserver
+  become: true
+  vars:
+   pkg_name: apache2
+  tasks:
+  - name: Install {{pkg_name}}  package
+    package: name={{pkg_name}} state=present
+  - name: Start the {{pkg_name}} application
+    service: name={{pkg_name}} state=started
+
+
+
+
+
+==================================
 Playbook 5: Loops
 ========================================
 
