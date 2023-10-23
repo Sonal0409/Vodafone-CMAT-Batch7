@@ -363,6 +363,13 @@ vim Customvariable.yml
   - name: Start the {{pkg_name}} application
     service: name={{pkg_name}} state=started
 
+
+# ansible-playbook Customvariable.yml
+
+Extra variables value at runtime.
+
+# ansible-playbook Customvariable.yml --extra-vars pkg_name=apache2
+
 =========================================
 
 - name: Introduction to Custom variables
