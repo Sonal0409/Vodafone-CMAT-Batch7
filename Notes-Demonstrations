@@ -363,7 +363,22 @@ vim Customvariable.yml
   - name: Start the {{pkg_name}} application
     service: name={{pkg_name}} state=started
 
+=========================================
 
+- name: Introduction to Custom variables
+  hosts: webserver
+  become: true
+  vars_prompt:
+   - name: pkg_name
+     prompt: Enter the package Name
+     private: false
+  tasks:
+  - name: Update apt-get repo
+    command: apt-get update
+  - name: Install {{pkg_name}}  package
+    package: name={{pkg_name}} state=present
+  - name: Start the {{pkg_name}} application
+    service: name={{pkg_name}} state=started
 
 
 
