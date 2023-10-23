@@ -327,6 +327,25 @@ Save the file and execute.
 
 # ansible-playbook playbookwhen.yml
 
+==============================================
+
+
+# vim WhenPlaybook2.yml
+
+- name: Introduction to When Conditions
+  become: true
+  hosts: webserver
+  tasks:
+  - name: Install a git package
+    package: name=git state=present
+    when: (ansible_distribution == "Centos" and ansible_distribution_major_version == "8") or
+          (ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "20")
+
+
+Save the file and execute.
+
+# ansible-playbook playbookwhen.yml
+=========================================
 Playbook 5: Loops
 ========================================
 
