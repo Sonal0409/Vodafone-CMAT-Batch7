@@ -577,28 +577,38 @@ Demo on tags:
 ========================================================
 vim playbooktags.yml
 
-- hosts: webserver
+- name: Tags in Ansible
+  hosts: webserver
   become: true
   tasks:
-  - name: update apt-cache
-    apt: update_cache=yes cache_valid_time=3600
+  - name: Create a file
+    file: name=/tmp/ansible_file state=touch
+    tags: createfile
+  - name: Create a file2
+    file: name=/tmp/ansible_file2 state=touch
+    tags: createfile
+  - name: start apache2
+    service: name=apache2 state=started
+    tags: startservice
+  - name: update apt-get
+    command: apt-get update
+    tags: execmd
+  - name: Execute a command
+    command: hostname -s
+    register: output_output
+    tags: execmd
+  - name: Install a git package
+    package: name=git state=present
     tags: install
-  - name: install package for LAMP architecture
-    package: name={{item}} state=present
-    loop:
-     - mysql-server
-     - php-mysql
-    tags: install
-  - name: Create a directory on worker nodes
-    file: path=/tmp/mydir state=directory
-    tags: mydir
-  - name: Create a file in the directory
-    file: path=/tmp/sonal state=touch
-    tags: myfile
+  - name: Start a service
+    service: name=apache2 state=started
+    tags: startservice
 
-# ansible-playbook playbooktags.yml --tags=install
-# ansible-playbook playbooktags.yml --tags=install,mydir
-# ansible-playbook playbooktags.yml --skip-tags=install,mydir
+
+
+# ansible-playbook  tagsplaybook.yml --tags createfile
+# ansible-playbook  tagsplaybook.yml --tags createfile,execmd
+# ansible-playbook  tagsplaybook.yml --skip-tags execmd
 # ansible-playbook playbooktags.yml --tags untagged
 # ansible-playbook playbooktags.yml --tags tagged
 
