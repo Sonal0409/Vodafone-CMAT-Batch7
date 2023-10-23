@@ -452,6 +452,65 @@ Handlers Demo1:
   - name: restart the apache2 application
     service: name=apache2 state=restarted
 
+=======================================================
+
+Demo 2:
+
+Flush Handlers:
+
+- name: Handlers demo2
+  hosts: webserver
+  become: true
+  tasks:
+  - name: Create a file
+    file: name=/tmp/ansible_file state=touch
+    notify: File creation
+    name: flush handlers for this task
+    meta: flush_handlers
+  - name: startch apache2
+    service: name=apache2 state=started
+    notify: service status
+  - name: update apt-get
+    command: apt-get update
+    notify: Apt update
+  - name: Execute a command
+    command: hostname -s
+    register: output_var
+    notify: print output
+  handlers:
+  - name: service status
+    debug: msg="service is running"
+  - name: File creation
+    debug: msg="File created successfully"
+  - name: Apt update
+    debug: msg="apt updated  successfully"
+  - name: print output
+    debug: var=output_var.stdout
+
+=============================================================
+
+Demo 3: force handlers
+
+- name: Handlers demo2
+  hosts: webserver
+  become: true
+  tasks:
+  - name: Create a file
+    file: name=/tmp/ansible_file state=touch
+    notify: File creation
+  - name: start apache2
+    service: name=apache2 state=started
+    notify: service status
+  - fail:
+  handlers:
+  - name: service status
+    debug: msg="service is running"
+  - name: File creation
+    debug: msg="File created successfully"
+
+
+# ansible-playbook handlersdemo2.yml --force-handlers
+
 ==================================
 Playbook 5: Loops
 ========================================
