@@ -431,7 +431,26 @@ Execute the playbook
 
 ansible-playbook varsfileplaybook.yml
 
+======================================
 
+Handlers Demo1:
+
+- name: Introduction to Custom variables
+  hosts: webserver
+  become: true
+  tasks:
+  - name: Update apt-get repo
+    command: apt-get update
+  - name: Install apache2  package
+    package: name=apache2 state=present
+  - name: Start the apache2  application
+    service: name=apache2 state=started
+  - name: Deploy a file on apache2 server
+    copy: src=index.html dest=/var/www/html
+    notify: restart the apache2 application
+  handlers:
+  - name: restart the apache2 application
+    service: name=apache2 state=restarted
 
 ==================================
 Playbook 5: Loops
