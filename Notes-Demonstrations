@@ -612,5 +612,622 @@ vim playbooktags.yml
 # ansible-playbook playbooktags.yml --tags untagged
 # ansible-playbook playbooktags.yml --tags tagged
 
+========================================================
+
+Jinja2 template:
+===================================
+
+# vim myapp.conf.j2
+
+# This is my first jinja2 template
+
+These are my app configuration
+Location of the file: /etc
+myconfiguration that will be unique to the server is:
+
+local_ip = {{ ansible_default_ipv4["address"] }}
+host_nodeName = {{ ansible_nodename }}
+host_os_family = {{ ansible_os_family }}
+host_domain = {{ ansible_domain }}
+
+Created by : {{ author }}
+
+
+Save the file (:wq!)
+
+# vim playbookJinja2.yml
+
+
+- hosts: webserver
+  become: true
+  vars:
+   author: Ansible
+  tasks:
+  - name: Copy the myapp.conf.j2 template  on host servers
+    template:
+     src: myapp.conf.j2
+     dest: /etc/myapp.conf
+
+Save file and execute.
+===========================================================
+
+Ansible Roles:
+==============================================
+Check you are in ansiuser home directory
+
+# cd
+
+# mkdir roles
+# cd roles
+Create a role apache using ansible-galaxy
+
+#  ansible-galaxy init apache
+
+# cd apache
+
+Delete the directory that  are not needed for this scenario
+
+# rm -rf README.md meta tests
+
+# sudo vim tasks/main.yml
+
+ - name: Check apache2 is present or not
+   package: name={{pkg_name[0]}} state=present
+ - name: Start the apache2 server
+   service: name={{pkg_name[0]}} state=started
+ - name: Deploy the index.html template
+   template: src=index.html.j2 dest=/var/www/html/index.html
+   notify: Restart apache2 server
+
+Save the file
+
+Write the vars section for the playbook:
+=========================
+# sudo vim vars/main.yml
+
+Press i to insert
+
+   email:
+    - admin@gmail.com
+   pkg_name:
+    - apache2
+    - httpd
+
+Save the file
+
+Write the template section:
+==========================
+
+#  sudo vim templates/index.html.j2
+
+
+This is jinja2 template
+
+The webserver is running on {{ ansible_hostname }}
+The system admin contact email is: {{email}}
+
+Save the file.
+
+=============================
+Enter data in handlers section
+=============================
+
+# sudo vim handlers/main.yml
+
+  - name: Restart apache2 server
+    service: name={{pkg_name[0]}} state=restarted
+
+
+Save the file.
+
+===============================
+
+After this come out in the directory where you are writing playbooks
+
+Note: the playbook that is calling the role is written in directory other than Roles directory
+
+
+Execute the command
+
+# cd
+
+# vim playbookRole1.yml
+
+
+- hosts: webserver
+  become: true
+  roles:
+   - apache
+
+
+Save the file
+
+Execute the playbook, which inturn executes the role.
+========================================
+
+Dynamic Inventory:
+====================
+
+install amazon aws on lab
+
+# ansible-galaxy collection install amazon.aws
+
+Install boto3 and botocore
+
+# sudo apt install python3-pip -y
+
+# pip3 install boto3
+
+Update ansible.cfg file with plugin details
+
+# cd /etc/ansible
+
+# sudo vim ansible.cfg
+
+Insert below text
+
+
+[defaults]
+
+enable_plugins = aws_ec2
+
+Save the file(:wq!)
+
+
+Create the inventory file now:
+
+# sudo vim aws_ec2.yml
+
+Add the below text
+
+plugin: amazon.aws.aws_ec2
+regions:
+ - us-east-1
+
+Save the file (:wq!)
+
+
+
+On the Ansible Lab:
+
+Create access key and secret key and save it as environment variables:
+
+ export AWS_ACCESS_KEY_ID=AKIAUJU24ZR3UBVGB6WV
+ export AWS_SECRET_ACCESS_KEY=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
+
+Now execute the command to list the inventory:
+
+ansible-inventory -i /etc/ansible/aws_ec2.yml --list
+
+You will see the inventory information under 
+
+"aws_ec2": {
+        "hosts": [
+            "ec2-34-227-191-8.compute-1.amazonaws.com",
+            "ec2-52-90-18-208.compute-1.amazonaws.com",
+            "ec2-54-158-3-77.compute-1.amazonaws.com",
+            "ec2-54-196-42-97.compute-1.amazonaws.com",
+            "ec2-54-234-48-31.compute-1.amazonaws.com",
+            "ec2-54-242-128-168.compute-1.amazonaws.com"
+        ]
+    }
+}
+
+===========================
+
+In order to execute any modules on the inventory, we have to do the SSH connection
+
+Take an Ec2 machine and perform the 4 steps of ansiuser creation and ssh connection
+
+# sudo adduser ansiuser
+
+# vim /etc/ssh/sshd_config
+
+# vim /etc/sudoers
+
+# systemctl restart sshd
+
+
+Now go to ACM machine and copy the ssh key and use publci key fo AWS ec2 instance
+
+# ssh-copy-id -i ansiuser@publicipEc2
+
+It will be successfull
+
+
+==========================================
+Ansible Vault:
+=========================================
+
+Demo1: Use ansible vault to create a new Encrypted file
+========
+
+# ansible-vault create vault1.yml
+
+Give:
+
+New Vault password:123
+Confirm password: 123
+It open the vim editor for the file, 
+Press i to insert some text like : Confidential data!
+
+Save the file(:wq!)
+
+Now if you will see the contents of the file, they will be encrypted
+
+# cat vault1.yml
+
+Demo 2: User ansible vault command to view the vault1.yml file
+================================
+
+# ansible-vault view vault1.yml
+
+Give the password: 123
+
+Demo3: Create an existing file and ask ansible-vault to encrypt it
+===============================
+
+# echo "file text to be encrypt" > encrypt_me.txt
+
+Use ansible vault command to encrypt:
+
+# ansible-vault encrypt encrypt_me.txt
+
+Give: 
+New Vault password: 123
+Confirm New Vault password: 123
+
+Encryption successful
+
+# cat  encrypt_me.txt
+
+Demo 4: Decrypt the text of the encrypted file
+==============================
+
+# ansible-vault decrypt encrypt_me.txt
+
+# cat encrypt_me.txt
+
+Demo 5: Edit an existing encrypted file”
+===========================
+
+# ansible-vault edit vault1.yml
+# enter password :123
+
+It will open the file, press i to insert the new data
+Save the file.
+File will be encrypted with new changes also
+Demo 6: change the password of encrypted file
+====================================
+#  ansible-vault rekey vault1.yml
+
+Give : 
+Vault password: 123
+New Vault password: 12345
+Confirm New Vault password: 12345
+
+Rekey successful
+
+Demo 7: Store the vault password in a file and pass the file name with ansible-vault command
+
+========================================
+
+# echo "file text to be encrypt" > encrypt_me.txt
+
+Use ansible vault command to encrypt:
+
+# ansible-vault encrypt encrypt_me.txt
+
+Give: 
+New Vault password: 12345
+Confirm New Vault password: 12345
+
+Encryption successful
+
+Save the password in new file
+
+# echo "12345" > my_passwd_file
+
+# ansible-vault view --vault-password-file my_passwd_file encrypt_me.txt
+
+Displays data of the file.
+
+
+=======================================
+Terraform:
+=================================================
+
+Download and setup terraform on MASTER NODE:
+===========================================
+
+https://developer.hashicorp.com/terraform/downloads
+
+# sudo su -
+
+# wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+# echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+# sudo apt update && sudo apt install terraform
+
+#terraform –version
+
+======================================
+
+Setup the AWS provider
+==================================
+
+Connect to AWS lab and create an IAM user with access key and secret key
+
+===================================
+
+Create
+ the terraform configuration file with provider block
+
+=================================
+
+
+# mkdir myterraformfiles
+# cd myterraformfiles
+# vim provider_aws.tf
+
+
+# configure AWS provider
+
+provider "aws" {
+  region = "us-east-1"
+  access_key = "AKIAUJU24ZR3TN4HE23O"
+  secret_key = "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"
+}
+
+
+Save the file
+
+# terraform init
+
+=================================
+Demo: Ftech the accesskey and secret key from shared credentials file of aws
+
+===================================
+
+# apt-get update
+# apt  install awscli 
+# aws configure
+Give value for access_key
+Press enter
+Give value for secret key, press enter
+No need to give region or format option.
+
+Now credentials for AWS will be set in the .aws directory.
+
+You can check the credentials at 
+
+# cd ~/.aws
+# ls
+
+
+Now go the folder where we have TF config file
+
+# cd myterraformfiles
+
+# vim provider_aws.tf
+
+Remove accesskey and secret key
+
+Add below text
+
+ shared_credentials_files = ["~/.aws/credentials"]
+
+
+The code should look like:
+
+# configure AWS provider
+
+provider "aws" {
+  region = "us-east-1"
+  shared_credentials_files = ["~/.aws/credentials"]
+}
+
+
+Execute below command
+
+# terraform init
+
+
+
+Demo 3: EC2 resource creation using terraform:
+
+Add the below code in the existing procider_aws.tf file.
+
+resource "aws_instance" "myec2" {
+  ami           = "ami-0bb4c991fa89d4b9b"
+  instance_type = "t2.micro"
+
+  tags = {
+    Name = "Instance1"
+  }
+}
+
+
+# terraform apply
+
+Give yes
+
+It will create the resource on AWS
+
+===================================
+
+Demo 4: Data block to pass filtered data to the resource block
+
+
+# configure AWS provider
+
+provider "aws" {
+  region = "us-east-1"
+  shared_credentials_files = ["~/.aws/credentials"]
+}
+
+# data block will filter data and pass it on to the resoruce block
+
+data "aws_ami" "my-ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm*"]
+  }
+}
+
+resource "aws_instance" "myec2" {
+  ami           = data.aws_ami.my-ami.id
+  instance_type = "t2.micro"
+
+  tags = {
+    Name = "Instance1"
+  }
+}
+
+
+Save the file and execute 
+
+# terraform apply
+
+Give yes for approval
+
+AWS instance will be created.
+
+========================================
+
+Demo 5: Create a new resource block for elastic Ip in AWS
+
+# vim eip_aws.tf
+
+resource "aws_eip" "myeip" {
+  vpc = true
+}
+
+
+[Or]
+
+resource "aws_eip" "myeip" {
+  domain = “vpc”
+}
+
+
+# terraform apply -auto-approve
+
+Associate this elastic ip to the existing Ec2 instance
+==========================================
+In the same file eip_aws.tf add the below association:
+
+resource "aws_eip_association" "eip_assoc" {
+  instance_id   = aws_instance.myec2.id
+  allocation_id = aws_eip.myeip.id
+}
+
+
+Save the file
+
+# terraform apply
+
+
+Output block to print attribute values upon creation of resource:
+
+# vim output-demo.tf
+
+output "eipvalue" {
+
+value = aws_eip.myeip.public_ip 
+}
+
+output "eipallocationid" {
+
+value = aws_eip.myeip.allocation_id
+
+}
+
+output "aws_instance_status"{ 
+
+value = aws_instance.myec2.instance_state
+
+}
+
+output "aws_instance_publicip" {
+
+value = aws_instance.myec2.public_ip
+}
+
+# terraform apply
+
+You will see the output values.
+
+===================================
+
+# mkdir variable-demo
+# cd variable-demo
+
+# vim variables.tf
+
+variable "access_key"{
+
+default = "AKIAUJU24ZR36YGWPS3D"
+
+}
+
+variable "secret_key" {
+
+default = "37a4jeARDewK7EDBVzpLfvZni/gv5dq+iSYmYfGE"
+
+}
+
+variable "ami" {
+
+default = "ami-0261755bbcb8c4a84"
+
+}
+
+variable "instance_type" {
+
+default = "t2.micro"
+
+}
+
+
+
+# vim aws_variable.tf
+
+provider "aws" {
+  region = "us-east-1"
+  access_key = var.access_key
+  secret_key = var.secret_key
+}
+
+resource "aws_instance" "myec2" {
+  ami           = var.ami
+  instance_type = var.instance_type
+
+  tags = {
+    Name = "Instance1"
+  }
+}
+
+# terraform plan
+
+
+Create terraform.tfvars file
+
+# vim terraform.tfvars
+
+Instance_type = “t2.large”
+
+
+Again execute terraform plan, actual value is picked up.
+
+
+============================================================
+
+
+
 
 
