@@ -190,6 +190,335 @@ ping module -->connect to worker nodes and see if it successfully connected and 
 webserver
 dbservers
 
+=======================
+
+
+Day 2: In class Notes
+==========================
+
+Scenario: where we have to check a condition/parameter of the host server
+If the condition is satisfied only then my tasks and its modules have to be excuted
+In such a scenario 
+ > we use Fact Variables to fetch the attributes/parameters of the every worker Host
+ > Using these Fact variables values we will put condition on the tasks in our playbook
+
+ Fact Variables/Magical variables/Special variable:
+=============================
+ These variables are provided by ansible.
+ The values to these variables are also gievn by Ansible
+ These variable names start with ansible.
+ User cannot change the name or value
+ These variable will store attribute features of every host server
+ That is why the name fatc variable, as these variables store facts about each host
+
+Just an example: 
+
+If we take an employee, its fact varaibles can be:
+
+employee1:
+emp Name: Marc
+Emp Id: 19876
+Emp City: london
+Emp Phone: 345768678
+Emp Skills: DevOps
+
+
+employee2:
+emp Name: John
+Emp Id: 13546
+Emp City: Paris
+Emp Phone: 563465
+Emp Skills: testing
+
+
+User defined Variables
+
+
+Module : Setup
+==============================
+
+Write a playbook that will install a package git package on Host server if it is of distribution centos and distribution_version is 8
+
+
+
+"ansible_distribution": "Ubuntu",
+"ansible_distribution_major_version": "20"
+
+
+in nutshel the fact varaibles  are all info of the remote servers used from ansible to  configure/apply changes to the remote servers correctly considering the info of fatc variable on remote server
+
+
+When keyword:
+==================================
+
+When keyword is used to apply if conditions or if else conditions in ansible playbooks
+With when keyword we use fact variables and their values for applyting the condition on the tasks
+If the fatc variable matches and condition is true, the task will be executed
+
+==================================
+
+Custom variables:
+================================
+
+Custom variables are variable whose name and values are given by the user
+
+We use variable in the playbooks. 
+These variable can be declared in the playbook, outside playbook(in another yaml file)
+
+The values to these variable can be given in the playbook, outside playbook(in another yaml file) or at runtime or as a prompt
+
+Varibales in vars block in a playbook
+
+=========================
+
+Handlers:
+==========================
+
+Just like tasks section we also have another section in the playbook called Handlers section
+
+In this section also we will write name and task module details
+
+But these tasks will not run always by themseleves, they will get executed only and only when they notified by a parent tasks from Tasks sections
+
+Scenario 1:
+
+The parent task will  notify the handler tasks only when the parent task status Changed
+
+the parent task status ok, failed, skipped -> handler task will not run
+
+Scenario 2: 
+
+If in a playbook you have many handlers task, but all the handlers task are always executed at the end after all the tasks have completed with status as changed ok.
+
+Scenarios 3:
+
+Run the handlers when the task is completed/ or as the handler task is notified
+
+Scenario 4: if the playbook fails, even if any handlers have been notified it will not executed
+
+
+
+
+
+- name: Handlers demo2
+  hosts: webserver
+  become: true
+  tasks:
+  - name: Create a file
+    file: name=/tmp/ansible_file state=touch
+    notify: File creation
+    name: flush handlers for this task
+    meta: flush_handlers
+  - name: startch apache2
+    service: name=apache2 state=started
+    notify: service status
+  - name: update apt-get
+    command: apt-get update
+    notify: Apt update
+  - name: Execute a command
+    command: hostname -s
+    register: output_var
+    notify: print output
+  handlers:
+  - name: service status
+    debug: msg="service is running"
+  - name: File creation
+    debug: msg="File created successfully"
+  - name: Apt update
+    debug: msg="apt updated  successfully"
+  - name: print output
+    debug: var=output_var.stdout
+
+
+
+- name: Tags in Ansible
+  hosts: webserver
+  become: true
+  tasks:
+  - name: Create a file
+    file: name=/tmp/ansible_file state=touch
+    tags: createfile
+  - name: Create a file2
+    file: name=/tmp/ansible_file2 state=touch
+    tags: createfile
+  - name: start apache2
+    service: name=apache2 state=started
+    tags: startservice
+  - name: update apt-get
+    command: apt-get update
+    tags: execmd
+  - name: Execute a command
+    command: hostname -s
+    register: output_output
+    tags: execmd
+  - name: Install a git package
+    package: name=git state=present
+    tags: install
+  - name: Start a service
+    service: name=apache2 state=started
+    tags: startservice
+
+
+
+=======================================
+
+
+key: value
+
+trainer: sonal
+company: Simplilearn
+course: Ansible
+
+
+key:   [list of values]
+ - value1
+ - value2
+ - value3
+
+pkg_name:
+ - git
+ - vim
+ - tree
+ - tomcat
+
+
+[list of map]
+
+key:
+ - key: value
+ - key: value
+ - key: value
+
+
+key:  [ list of objects]
+ - key: value
+   key: value
+   key: value
+ - key: value
+   key: value
+
+
+Playbook:
+========================
+
+consist of multiple plays:
+- list of plays
+
+
+
+
+- name: playname
+  hosts: webserver  [ single map]
+  vars:
+   key: value
+   key: 
+    - value
+    - value
+   key:
+    - key: value
+    - key: value
+ 
+  tasks:[ set of objects]
+  - name: sdfdssgdf
+    modulename: name="" state=""
+  - name: sdfdssgdf
+    modulename: name="" state=""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
