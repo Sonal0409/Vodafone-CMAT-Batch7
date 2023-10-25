@@ -670,7 +670,8 @@ Delete the directory that  are not needed for this scenario
 # rm -rf README.md meta tests
 
 # sudo vim tasks/main.yml
-
+ - name: update apt repo
+   command: apt-get update
  - name: Check apache2 is present or not
    package: name={{pkg_name[0]}} state=present
  - name: Start the apache2 server
