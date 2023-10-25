@@ -1248,9 +1248,9 @@ Loops in Ansible:
      - tree
      - vim
      - name
-   - name: Create multiple users
-     user: name={{item}} state=present
-     loop: "{{user_list}}"
+  - name: Create multiple users
+    user: name={{item}} state=present
+    loop: "{{user_list}}"
 
 
 
