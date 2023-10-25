@@ -793,8 +793,8 @@ On the Ansible Lab:
 
 Create access key and secret key and save it as environment variables:
 
- export AWS_ACCESS_KEY_ID=AKIAUJU24ZR3UBVGB6WV
- export AWS_SECRET_ACCESS_KEY=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
+ export AWS_ACCESS_KEY_ID=AKIAUJU24ZR333KAYIEA
+ export AWS_SECRET_ACCESS_KEY=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
 
 Now execute the command to list the inventory:
 
