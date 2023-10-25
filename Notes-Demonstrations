@@ -1228,7 +1228,29 @@ Again execute terraform plan, actual value is picked up.
 
 ============================================================
 
+Loops in Ansible:
 
+- name: Loops in ansible
+  hosts: webserver
+  become: true
+  vars:
+   user_list:
+    - user01
+    - user02
+    - user03
+  tasks:
+  - name: Install packages git,apache,maven,tree
+    package: name={{item}} state=present
+    loop:
+     - git
+     - apache2
+     - maven
+     - tree
+     - vim
+     - name
+   - name: Create multiple users
+     user: name={{item}} state=present
+     loop: "{{user_list}}"
 
 
 
