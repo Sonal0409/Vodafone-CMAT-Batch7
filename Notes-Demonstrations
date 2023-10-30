@@ -1279,4 +1279,127 @@ resource "aws_subnet" "subnet-1" {
   }
 }
 
+resource "aws_route_table" "sl-route-table" {
+  vpc_id = aws_vpc.sl-vpc.id
+   tags = {
+  Name = "sl-route-table"
+}
+}
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.subnet-1.id
+  route_table_id = aws_route_table.sl-route-table.id
+}
+
+resource "aws_internet_gateway" "sl-gw" {
+  vpc_id = aws_vpc.sl-vpc.id
+
+  tags = {
+    Name = "sl-gw"
+  }
+}
+
+resource "aws_route" "sl-route" {
+  route_table_id            = aws_route_table.sl-route-table.id
+  destination_cidr_block    = "0.0.0.0/0"
+  gateway_id = aws_internet_gateway.sl-gw.id
+}
+
+resource "aws_internet_gateway" "sl-gw" {
+  vpc_id = aws_vpc.sl-vpc.id
+
+  tags = {
+    Name = "sl-gw"
+  }
+}
+
+resource "aws_route" "sl-route" {
+  route_table_id            = aws_route_table.sl-route-table.id
+  destination_cidr_block    = "0.0.0.0/0"
+  gateway_id = aws_internet_gateway.sl-gw.id
+}
+
+resource "aws_security_group" "sl-sg" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
+  vpc_id      = aws_vpc.sl-vpc.id
+
+  ingress {
+    description      = "TLS from VPC"
+    from_port        = 443
+    to_port          = 443
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  
+  }
+ ingress {
+    description      = "TLS from VPC"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+ ingress {
+    description      = "TLS from VPC"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "allow_tls"
+  }
+}
+
+resource "tls_private_key" "web-key" {
+  algorithm = "RSA"
+ 
+}
+
+resource "aws_key_pair" "mykey" {
+  key_name   = "web-key"
+  public_key = tls_private_key.web-key.public_key_openssh
+}
+
+resource "local_file" "web-key" {
+
+content = tls_private_key.web-key.private_key_pem
+filename = "web-key.pem"
+}
+
+resource "aws_instance" "web" {
+  ami           = "ami-01eccbf80522b562b"
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.subnet-1.id
+  key_name = "web-key"
+  security_groups = [aws_security_group.sl-sg.id]
+  tags = {
+    Name = "WebServer"
+  }
+
+provisioner "remote-exec" {
+
+ connection {
+    type     = "ssh"
+    user     = "ec2-user"
+    private_key = tls_private_key.web-key.private_key_pem
+    host     = self.public_ip
+  }
+inline = [
+ "sudo yum install httpd php -y",
+ "sudo systemctl start httpd",
+ "sudo systemctl enable httpd"
+]
+
+}
+
+}
 
