@@ -1226,29 +1226,36 @@ Again execute terraform plan, actual value is picked up.
 
 ============================================================
 
-Loops in Ansible:
+Dynamic block in terraform:
 
-- name: Loops in ansible
-  hosts: webserver
-  become: true
-  vars:
-   user_list:
-    - user01
-    - user02
-    - user03
-  tasks:
-  - name: Install packages git,apache,maven,tree
-    package: name={{item}} state=present
-    loop:
-     - git
-     - apache2
-     - maven
-     - tree
-     - vim
-     - name
-  - name: Create multiple users
-    user: name={{item}} state=present
-    loop: "{{user_list}}"
+
+provider "aws" {
+  region     = "us-east-1"
+  shared_credentials_files = ["~/.aws/credentials"]
+}
+
+variable "sg_ports"{
+type = list(number)
+default = [8080,8989,80,7878]
+}
+
+resource "aws_security_group" "allow_tls" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
+  vpc_id      = aws_vpc.main.id
+
+  dynamic "ingress" {
+    for_each = var.sg_ports
+    iterator = port
+    content{
+    description      = "TLS from VPC"
+    from_port        = port.value
+    to_port          = port.value
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+}
+}
 
 
 
